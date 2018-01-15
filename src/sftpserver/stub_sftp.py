@@ -88,10 +88,6 @@ def blob_to_stat(blob):
     return attr
 
 class StubSFTPServer (SFTPServerInterface):
-    # assume current folder is a fine root
-    # (the tests always create and eventualy delete a subfolder, so there shouldn't be any mess)
-    ROOT = os.getcwd()
-
     def __init__(self, *args, **kwargs):
         self.client = get_storage_client()
         self.bucket = self.client.get_bucket(BUCKET)
@@ -103,33 +99,22 @@ class StubSFTPServer (SFTPServerInterface):
         print(fname.strip("/"))
         return self.bucket.get_blob(fname.strip("/"))
 
-    def _realpath(self, path):
-        return self.ROOT + self.canonicalize(path)
-
-
     def list_folder(self, path):
         prefix = path if path != "/" else None
-        res = self.bucket.list_blobs(prefix=prefix, max_results=1000, delimiter="/")
+        res = self.pbucket.list_blobs(prefix=prefix, max_results=1000, delimiter="/")
         return [blob_to_stat(blob)
                 for blob in res
                 if not (blob.metadata and blob.metadata.get(DELETED_META_KEY, False) == "1")]
 
 
     def stat(self, path):
-        try:
-            blob = self.get_file(path)
-            return blob_to_stat(blob)
-        except ex:
-            print(ex)
-            raise
+        blob = self.get_file(path)
+        return blob_to_stat(blob)
+
 
     def lstat(self, path):
-        try:
-            blob = self.get_file(path)
-            return blob_to_stat(blob)
-        except ex:
-            print(ex)
-            raise
+        blob = self.get_file(path)
+        return blob_to_stat(blob)
 
     def open(self, path, flags, attr):
         # Writing is not supported
