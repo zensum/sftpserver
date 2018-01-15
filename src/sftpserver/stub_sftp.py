@@ -85,10 +85,10 @@ def blob_to_stat(blob):
     attr.st_mode = 0o0100444
     attr.st_uid = 1000
     attr.st_gid = 1000
-    attr.st_ctime = blob.time_created
-    attr.st_mtime = 1
-    attr.st_atime = 1
-    print(attr)
+    ts = blob.time_created.timestamp()
+    attr.st_ctime = ts
+    attr.st_mtime = blob.updated.timestamp() if blob.updated else ts
+    attr.st_atime = blob.updated.timestamp() if blob.updated else ts
     return attr
 
 class StubSFTPServer (SFTPServerInterface):
