@@ -23,7 +23,7 @@ import time
 import logging
 from io import BytesIO
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.DEBUG)
 
 PROJECT_ID = os.environ["GCP_PROJECT_ID"]
 BUCKET = os.environ["GCP_STORAGE_BUCKET"]
@@ -63,7 +63,7 @@ class StubServer (ServerInterface):
 
 class StubSFTPHandle (SFTPHandle):
     def stat(self):
-        return blob_to_stat(self.get_file(self.filename))
+        return blob_to_stat(self.blob)
 
     def chattr(self, attr):
         return SFTP_PERMISSION_DENIED
@@ -86,6 +86,20 @@ def is_blob_deleted(blob):
         blob.metadata and
         blob.metadata.get(DELETED_META_KEY, False) == "1"
     )
+
+def load_blob_to_bfr(blob):
+    bfr = BytesIO()
+    blob.download_to_file(bfr)
+    bfr.seek(0)
+    return bfr
+
+def create_handle(blob, flags):
+    fobj = StubSFTPHandle(flags)
+    fobj.blob = blob
+    fobj.filename = blob.path
+    fobj.readfile = load_blob_to_bfr(blob)
+    fobj.writefile = None
+    return fobj
 
 class StubSFTPServer (SFTPServerInterface):
     def __init__(self, *args, **kwargs):
@@ -116,20 +130,11 @@ class StubSFTPServer (SFTPServerInterface):
 
     def open(self, path, flags, attr):
         # Writing is not supported
-        bfr = BytesIO()
-
         blob = self.get_file(path)
         if blob is None:
             return SFTP_NO_SUCH_FILE
 
-        blob.download_to_file(bfr)
-        bfr.seek(0)
-        fobj = StubSFTPHandle(flags)
-        fobj.get_file = self.get_file
-        fobj.filename = path
-        fobj.readfile = bfr
-        fobj.writefile = None
-        return fobj
+        return create_handle(blob, flags)
 
     def remove(self, path):
         blob = self.get_file(path)
