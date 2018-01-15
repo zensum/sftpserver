@@ -84,7 +84,7 @@ class StubSFTPServer (SFTPServerInterface):
             raise RuntimeError("Missing bucket")
         super().__init__(*args, **kwargs)
 
-    def get_file(fname):
+    def get_file(self, fname):
         print(fname.strip("/"))
         return self.bucket.get_blob(fname.strip("/"))
 
