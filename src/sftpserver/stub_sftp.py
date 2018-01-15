@@ -34,8 +34,10 @@ SFTP_PASSWORD = os.environ.get("SFTP_PASSWORD", None)
 
 DELETED_META_KEY = "se.zensum.sftpserver/deleted"
 
+
 def get_storage_client():
     return storage.Client(project=PROJECT_ID)
+
 
 class StubServer (ServerInterface):
     def check_auth_password(self, username, password):
@@ -68,6 +70,7 @@ class StubSFTPHandle (SFTPHandle):
     def chattr(self, attr):
         return SFTP_PERMISSION_DENIED
 
+
 def blob_to_stat(blob):
     attr = SFTPAttributes()
     attr.filename = blob.name
@@ -81,11 +84,13 @@ def blob_to_stat(blob):
     attr.st_atime = blob.updated.timestamp() if blob.updated else ts
     return attr
 
+
 def is_blob_deleted(blob):
     return (
         blob.metadata and
         blob.metadata.get(DELETED_META_KEY, False) == "1"
     )
+
 
 class StubSFTPServer (SFTPServerInterface):
     def __init__(self, *args, **kwargs):
@@ -100,15 +105,14 @@ class StubSFTPServer (SFTPServerInterface):
 
     def list_folder(self, path):
         prefix = path if path != "/" else None
-        res = self.bucket.list_blobs(prefix=prefix, max_results=1000, delimiter="/")
+        res = self.bucket.list_blobs(
+            prefix=prefix, max_results=1000, delimiter="/")
         return [blob_to_stat(blob)
                 for blob in res if not is_blob_deleted(blob)]
-
 
     def stat(self, path):
         blob = self.get_file(path)
         return blob_to_stat(blob)
-
 
     def lstat(self, path):
         blob = self.get_file(path)
