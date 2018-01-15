@@ -38,7 +38,7 @@ def get_storage_client():
 
 class StubServer (ServerInterface):
     def check_auth_password(self, username, password):
-        if SFTP_PASSWORD:
+        if not SFTP_PASSWORD:
             return AUTH_FAILED
 
         if username != SFTP_USERNAME:
