@@ -114,7 +114,7 @@ class StubSFTPServer (SFTPServerInterface):
         # Writing is not supported
         bfr = BytesIO()
 
-        blob = self.get_file(path.strip("/"))
+        blob = self.get_file(path)
         if blob is None:
             return SFTP_NO_SUCH_FILE
 
