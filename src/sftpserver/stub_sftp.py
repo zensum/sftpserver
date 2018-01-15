@@ -15,10 +15,6 @@
 # along with Paramiko; if not, write to the Free Software Foundation, Inc.,
 # 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 
-"""
-A stub SFTP server for loopback SFTP testing.
-"""
-
 import os
 from paramiko import ServerInterface, SFTPServerInterface, SFTPServer, SFTPAttributes, \
     SFTPHandle, SFTP_OK, AUTH_SUCCESSFUL, AUTH_FAILED, OPEN_SUCCEEDED, SFTP_PERMISSION_DENIED, SFTP_NO_SUCH_FILE, AUTH_FAILED
@@ -52,11 +48,9 @@ class StubServer (ServerInterface):
         if password != SFTP_PASSWORD:
             return AUTH_FAILED
 
-        # all are allowed
         return AUTH_SUCCESSFUL
 
     def check_auth_publickey(self, username, key):
-        # all are allowed
         if username != SFTP_USERNAME:
             return AUTH_FAILED
 
