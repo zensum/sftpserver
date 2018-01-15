@@ -101,6 +101,22 @@ def create_handle(blob, flags):
     fobj.writefile = None
     return fobj
 
+def mark_as_deleted(blob):
+    if not blob:
+        return SFTP_NO_SUCH_FILE
+    md = blob.metadata
+    if md is None:
+        md = {}
+
+    if md[DELETED_META_KEY] == "1":
+        return False
+
+    md[DELETED_META_KEY] = "1"
+    blob.metadata = md
+    blob.patch()
+    return True
+
+
 class StubSFTPServer (SFTPServerInterface):
     def __init__(self, *args, **kwargs):
         self.client = get_storage_client()
@@ -138,11 +154,10 @@ class StubSFTPServer (SFTPServerInterface):
 
     def remove(self, path):
         blob = self.get_file(path)
-        if blob:
-            md = blob.metadata
-            if md is None:
-                md = {}
-            md[DELETED_META_KEY] = "1"
-            blob.metadata = md
-            blob.patch()
-        return SFTP_OK
+        if blob is None:
+            return SFTP_NO_SUCH_FILE
+
+        if mark_as_deleted(blob):
+            return SFTP_OK
+        else:
+            return SFTP_NO_SUCH_FILE
