@@ -167,24 +167,3 @@ class StubSFTPServer (SFTPServerInterface):
             blob.metadata = md
             blob.patch()
         return SFTP_OK
-
-    def rename(self, oldpath, newpath):
-        return SFTP_PERMISSION_DENIED
-
-    def mkdir(self, path, attr):
-        return SFTP_PERMISSION_DENIED
-
-    def rmdir(self, path):
-        # May not remove directories
-        return SFTP_PERMISSION_DENIED
-
-    def chattr(self, path, attr):
-        # Not allowed to change permissions
-        return SFTP_PERMISSION_DENIED
-
-    def symlink(self, target_path, path):
-        # Can't create symlinks
-        return SFTP_PERMISSION_DENIED
-
-    def readlink(self, path):
-        return SFTP_PERMISSIONED_DENIED
