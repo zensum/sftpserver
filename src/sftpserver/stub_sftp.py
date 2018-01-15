@@ -22,23 +22,42 @@ A stub SFTP server for loopback SFTP testing.
 
 import os
 from paramiko import ServerInterface, SFTPServerInterface, SFTPServer, SFTPAttributes, \
-    SFTPHandle, SFTP_OK, AUTH_SUCCESSFUL, OPEN_SUCCEEDED, SFTP_PERMISSION_DENIED, SFTP_NO_SUCH_FILE
+    SFTPHandle, SFTP_OK, AUTH_SUCCESSFUL, AUTH_FAILED, OPEN_SUCCEEDED, SFTP_PERMISSION_DENIED, SFTP_NO_SUCH_FILE, AUTH_FAILED
 from google.cloud import storage
 from io import BytesIO
 
 PROJECT_ID = os.environ["GCP_PROJECT_ID"]
 BUCKET = os.environ["GCP_STORAGE_BUCKET"]
 
+SFTP_PUBLIC_KEY = os.environ["SFTP_PUBLIC_KEY"]
+SFTP_USERNAME = os.environ["SFTP_USERNAME"]
+SFTP_PASSWORD = os.environ.get("SFTP_PASSWORD", None)
+
 def get_storage_client():
     return storage.Client(project=PROJECT_ID)
 
 class StubServer (ServerInterface):
     def check_auth_password(self, username, password):
+        if SFTP_PASSWORD:
+            return AUTH_FAILED
+
+        if username != SFTP_USERNAME:
+            return AUTH_FAILED
+
+        if password != SFTP_PASSWORD:
+            return AUTH_FAILED
+
         # all are allowed
         return AUTH_SUCCESSFUL
 
     def check_auth_publickey(self, username, key):
         # all are allowed
+        if username != SFTP_USERNAME:
+            return AUTH_FAILED
+
+        if key != SFTP_PUBLIC_KEY:
+            return AUTH_FAILED
+
         return AUTH_SUCCESSFUL
 
     def check_channel_request(self, kind, chanid):
