@@ -76,10 +76,7 @@ class StubServer (ServerInterface):
 
 class StubSFTPHandle (SFTPHandle):
     def stat(self):
-        try:
-            return SFTPAttributes.from_stat(os.fstat(self.readfile.fileno()))
-        except OSError as e:
-            return SFTPServer.convert_errno(e.errno)
+        return blob_to_stat(self.get_file(self.filename))
 
     def chattr(self, attr):
         return SFTP_PERMISSION_DENIED
@@ -152,6 +149,7 @@ class StubSFTPServer (SFTPServerInterface):
         blob.download_to_file(bfr)
         bfr.seek(0)
         fobj = StubSFTPHandle(flags)
+        fobj.get_file = self.get_file
         fobj.filename = path
         fobj.readfile = bfr
         fobj.writefile = None
