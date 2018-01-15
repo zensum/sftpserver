@@ -29,7 +29,7 @@ from io import BytesIO
 PROJECT_ID = os.environ["GCP_PROJECT_ID"]
 BUCKET = os.environ["GCP_STORAGE_BUCKET"]
 
-SFTP_PUBLIC_KEY = os.environ["SFTP_PUBLIC_KEY"]
+SFTP_PUBLIC_KEY = os.environ.get("SFTP_PUBLIC_KEY", None)
 SFTP_USERNAME = os.environ["SFTP_USERNAME"]
 SFTP_PASSWORD = os.environ.get("SFTP_PASSWORD", None)
 
