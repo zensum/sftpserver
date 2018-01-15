@@ -106,30 +106,23 @@ class StubSFTPServer (SFTPServerInterface):
             print(ex)
 
     def lstat(self, path):
-        print("stat {}".format(path))
+        print("lstat {}".format(path))
         try:
             blob = self.get_file(path)
-            print(blob)
             return blob_to_stat(blob)
         except ex:
             print(ex)
 
     def open(self, path, flags, attr):
         # Writing is not supported
-        print("rheep", path)
-        print(flags)
-        print(attr)
         bfr = BytesIO()
 
         blob = self.get_file(path.strip("/"))
-        print("wheep")
         if blob is None:
             return SFTP_NO_SUCH_FILE
 
         blob.download_to_file(bfr)
-
         bfr.seek(0)
-
         fobj = StubSFTPHandle(flags)
         fobj.filename = path
         fobj.readfile = bfr
