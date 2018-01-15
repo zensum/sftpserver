@@ -42,19 +42,13 @@ class StubServer (ServerInterface):
         if not SFTP_PASSWORD:
             return AUTH_FAILED
 
-        if username != SFTP_USERNAME:
-            return AUTH_FAILED
-
-        if password != SFTP_PASSWORD:
+        if username != SFTP_USERNAME or password != SFTP_PASSWORD:
             return AUTH_FAILED
 
         return AUTH_SUCCESSFUL
 
     def check_auth_publickey(self, username, key):
-        if username != SFTP_USERNAME:
-            return AUTH_FAILED
-
-        if key != SFTP_PUBLIC_KEY:
+        if username != SFTP_USERNAME or key != SFTP_PUBLIC_KEY:
             return AUTH_FAILED
 
         return AUTH_SUCCESSFUL
