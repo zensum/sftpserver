@@ -24,7 +24,10 @@ import os
 from paramiko import ServerInterface, SFTPServerInterface, SFTPServer, SFTPAttributes, \
     SFTPHandle, SFTP_OK, AUTH_SUCCESSFUL, AUTH_FAILED, OPEN_SUCCEEDED, SFTP_PERMISSION_DENIED, SFTP_NO_SUCH_FILE, AUTH_FAILED
 from google.cloud import storage
+import logging
 from io import BytesIO
+
+logging.basicConfig(level=logging.INFO)
 
 PROJECT_ID = os.environ["GCP_PROJECT_ID"]
 BUCKET = os.environ["GCP_STORAGE_BUCKET"]
