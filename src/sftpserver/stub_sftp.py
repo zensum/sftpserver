@@ -81,6 +81,12 @@ def blob_to_stat(blob):
     attr.st_atime = blob.updated.timestamp() if blob.updated else ts
     return attr
 
+def is_blob_deleted(blob):
+    return (
+        blob.metadata and
+        blob.metadata.get(DELETED_META_KEY, False) == "1"
+    )
+
 class StubSFTPServer (SFTPServerInterface):
     def __init__(self, *args, **kwargs):
         self.client = get_storage_client()
@@ -90,15 +96,13 @@ class StubSFTPServer (SFTPServerInterface):
         super().__init__(*args, **kwargs)
 
     def get_file(self, fname):
-        print(fname.strip("/"))
         return self.bucket.get_blob(fname.strip("/"))
 
     def list_folder(self, path):
         prefix = path if path != "/" else None
-        res = self.pbucket.list_blobs(prefix=prefix, max_results=1000, delimiter="/")
+        res = self.bucket.list_blobs(prefix=prefix, max_results=1000, delimiter="/")
         return [blob_to_stat(blob)
-                for blob in res
-                if not (blob.metadata and blob.metadata.get(DELETED_META_KEY, False) == "1")]
+                for blob in res if not is_blob_deleted(blob)]
 
 
     def stat(self, path):
