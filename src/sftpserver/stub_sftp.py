@@ -98,20 +98,20 @@ class StubSFTPServer (SFTPServerInterface):
 
 
     def stat(self, path):
-        print("stat {}".format(path))
         try:
             blob = self.get_file(path)
             return blob_to_stat(blob)
         except ex:
             print(ex)
+            raise
 
     def lstat(self, path):
-        print("lstat {}".format(path))
         try:
             blob = self.get_file(path)
             return blob_to_stat(blob)
         except ex:
             print(ex)
+            raise
 
     def open(self, path, flags, attr):
         # Writing is not supported
