@@ -24,6 +24,7 @@ import os
 from paramiko import ServerInterface, SFTPServerInterface, SFTPServer, SFTPAttributes, \
     SFTPHandle, SFTP_OK, AUTH_SUCCESSFUL, AUTH_FAILED, OPEN_SUCCEEDED, SFTP_PERMISSION_DENIED, SFTP_NO_SUCH_FILE, AUTH_FAILED
 from google.cloud import storage
+import time
 import logging
 from io import BytesIO
 
@@ -35,6 +36,8 @@ BUCKET = os.environ["GCP_STORAGE_BUCKET"]
 SFTP_PUBLIC_KEY = os.environ.get("SFTP_PUBLIC_KEY", None)
 SFTP_USERNAME = os.environ["SFTP_USERNAME"]
 SFTP_PASSWORD = os.environ.get("SFTP_PASSWORD", None)
+
+DELETED_META_KEY = "se.zensum.sftpserver/deleted"
 
 def get_storage_client():
     return storage.Client(project=PROJECT_ID)
@@ -115,8 +118,11 @@ class StubSFTPServer (SFTPServerInterface):
 
 
     def list_folder(self, path):
-        res = self.bucket.list_blobs(prefix=path if path != "/" else None, max_results=1000, delimiter="/")
-        return [blob_to_stat(blob) for blob in res]
+        prefix = path if path != "/" else None
+        res = self.bucket.list_blobs(prefix=prefix, max_results=1000, delimiter="/")
+        return [blob_to_stat(blob)
+                for blob in res
+                if not (blob.metadata and blob.metadata.get(DELETED_META_KEY, False) == "1")]
 
 
     def stat(self, path):
@@ -152,7 +158,14 @@ class StubSFTPServer (SFTPServerInterface):
         return fobj
 
     def remove(self, path):
-        # TODO: this needs handling
+        blob = self.get_file(path)
+        if blob:
+            md = blob.metadata
+            if md is None:
+                md = {}
+            md[DELETED_META_KEY] = "1"
+            blob.metadata = md
+            blob.patch()
         return SFTP_OK
 
     def rename(self, oldpath, newpath):
