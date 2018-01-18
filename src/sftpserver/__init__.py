@@ -29,20 +29,17 @@ def create_transport(conn, host_key):
     )
     return t
 
-def server_loop(sock, host_key):
+def server_loop(sock, host_key, server):
     while True:
         conn, addr = sock.accept()
         transport = create_transport(conn, host_key)
-
-        srv = CustomServer()
-
-        transport.start_server(server=srv)
-
+        transport.start_server(server=server)
         channel = transport.accept()
         while transport.is_active():
             time.sleep(1)
 
 def main():
+    server = CustomServer()
     sock = create_listen_socket(HOST, PORT)
     host_key = pm.RSAKey.from_private_key_file(HOST_KEY_PATH)
-    server_loop(sock, host_key)
+    server_loop(sock, host_key, server)
