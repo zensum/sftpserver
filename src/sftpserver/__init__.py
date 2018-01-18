@@ -32,7 +32,8 @@ import textwrap
 
 import paramiko
 
-from sftpserver.stub_sftp import StubServer, StubSFTPServer
+from sftpserver.stub_sftp import StubSFTPServer
+from sftpserver.auth import StubServer
 
 HOST, PORT = 'localhost', 3373
 BACKLOG = 10
