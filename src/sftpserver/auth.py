@@ -1,10 +1,6 @@
 import os
-from paramiko import RSAKey, ServerInterface
+from paramiko import RSAKey, ServerInterface, AUTH_SUCCESSFUL, AUTH_FAILED, OPEN_SUCCEEDED
 from paramiko.py3compat import b, decodebytes
-
-SFTP_PUBLIC_KEY_PATH = os.environ.get("SFTP_PUBLIC_KEY_PATH", None)
-SFTP_USERNAME = os.environ["SFTP_USERNAME"]
-SFTP_PASSWORD = os.environ.get("SFTP_PASSWORD", None)
 
 def read_authorized_keys(path):
     return (
@@ -17,26 +13,31 @@ def parse_pubkey(line):
     data = line.strip().split(" ")[1]
     return RSAKey(data=decodebytes(b(data)))
 
-authorized_keys = list(read_authorized_keys(SFTP_PUBLIC_KEY_PATH))
+class CustomServer(ServerInterface):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        key_path = os.environ.get("SFTP_PUBLIC_KEY_PATH", None)
+        self.username = os.environ["SFTP_USERNAME"]
+        self.password = os.environ.get("SFTP_PASSWORD", None)
+        self.authorized_keys = list(read_authorized_keys(key_path))
 
-def get_storage_client():
-    return storage.Client(project=PROJECT_ID)
+    def is_key_authorized(self, key):
+        return any(k == key for k in self.authorized_keys)
 
-class StubServer (ServerInterface):
     def check_auth_password(self, username, password):
         if not SFTP_PASSWORD:
             return AUTH_FAILED
 
-        if username != SFTP_USERNAME or password != SFTP_PASSWORD:
+        if username != self.username or password != self.password:
             return AUTH_FAILED
 
         return AUTH_SUCCESSFUL
 
     def check_auth_publickey(self, username, key):
-        if username != SFTP_USERNAME:
+        if username != self.username:
             return AUTH_FAILED
-        key_matches = any(k == key for k in authorized_keys)
-        if key_matches:
+
+        if self.is_key_authorized(key):
             return AUTH_SUCCESSFUL
         else:
             return AUTH_FAILED
@@ -46,4 +47,7 @@ class StubServer (ServerInterface):
 
     def get_allowed_auths(self, username):
         """List availble auth mechanisms."""
-        return "password,publickey"
+        if len(self.authorized_keys):
+            return "password,publickey"
+        else:
+            return "password"

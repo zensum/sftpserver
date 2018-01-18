@@ -33,7 +33,7 @@ import textwrap
 import paramiko
 
 from sftpserver.stub_sftp import StubSFTPServer
-from sftpserver.auth import StubServer
+from sftpserver.auth import CustomServer
 
 HOST, PORT = 'localhost', 3373
 BACKLOG = 10
@@ -57,7 +57,7 @@ def start_server(host, port, keyfile, level):
         transport.set_subsystem_handler(
             'sftp', paramiko.SFTPServer, StubSFTPServer)
 
-        server = StubServer()
+        server = CustomServer()
         transport.start_server(server=server)
 
         channel = transport.accept()

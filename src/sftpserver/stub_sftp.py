@@ -28,6 +28,10 @@ from io import BytesIO
 
 logging.basicConfig(level=logging.DEBUG)
 
+def get_storage_client():
+    return storage.Client(project=PROJECT_ID)
+
+
 PROJECT_ID = os.environ["GCP_PROJECT_ID"]
 BUCKET = os.environ["GCP_STORAGE_BUCKET"]
 DELETED_META_KEY = "se.zensum.sftpserver/deleted"
