@@ -1,101 +1,48 @@
-###############################################################################
-#
-# Copyright (c) 2011-2017 Ruslan Spivak
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in
-# all copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-# THE SOFTWARE.
-#
-###############################################################################
-
-__author__ = 'Ruslan Spivak <ruslan.spivak@gmail.com>'
-
-import time
+import paramiko as pm
+import os
 import socket
-import argparse
-import sys
-import textwrap
-
-import paramiko
-
 from sftpserver.stub_sftp import StubSFTPServer
 from sftpserver.auth import CustomServer
+import time
 
-HOST, PORT = 'localhost', 3373
+HOST = 'localhost'
+PORT = int(os.environ.get("PORT", "3373"))
+HOST_KEY_PATH = os.environ["HOST_KEY_PATH"]
 BACKLOG = 10
 
+def create_listen_socket(host, port):
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    sock.setsockopt(
+        socket.SOL_SOCKET,
+        socket.SO_REUSEADDR,
+        True
+    )
+    sock.bind((host, port))
+    sock.listen(BACKLOG)
+    return sock
 
-def start_server(host, port, keyfile, level):
-    paramiko_level = getattr(paramiko.common, level)
-    paramiko.common.logging.basicConfig(level=paramiko_level)
+def create_transport(conn, host_key):
+    t = pm.Transport(conn)
+    t.add_server_key(host_key)
+    t.set_subsystem_handler(
+        'sftp', pm.SFTPServer, StubSFTPServer
+    )
+    return t
 
-    server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, True)
-    server_socket.bind((host, port))
-    server_socket.listen(BACKLOG)
-
+def server_loop(sock, host_key):
     while True:
-        conn, addr = server_socket.accept()
+        conn, addr = sock.accept()
+        transport = create_transport(conn, host_key)
 
-        host_key = paramiko.RSAKey.from_private_key_file(keyfile)
-        transport = paramiko.Transport(conn)
-        transport.add_server_key(host_key)
-        transport.set_subsystem_handler(
-            'sftp', paramiko.SFTPServer, StubSFTPServer)
+        srv = CustomServer()
 
-        server = CustomServer()
-        transport.start_server(server=server)
+        transport.start_server(server=srv)
 
         channel = transport.accept()
         while transport.is_active():
             time.sleep(1)
 
-
 def main():
-    usage = """\
-    usage: sftpserver [options]
-    -k/--keyfile should be specified
-    """
-    parser = argparse.ArgumentParser(usage=textwrap.dedent(usage))
-    parser.add_argument(
-        '--host', dest='host', default=HOST,
-        help='listen on HOST [default: %(default)s]'
-    )
-    parser.add_argument(
-        '-p', '--port', dest='port', type=int, default=PORT,
-        help='listen on PORT [default: %(default)d]'
-    )
-    parser.add_argument(
-        '-l', '--level', dest='level', default='INFO',
-        help='Debug level: WARNING, INFO, DEBUG [default: %(default)s]'
-    )
-    parser.add_argument(
-        '-k', '--keyfile', dest='keyfile', metavar='FILE',
-        help='Path to private key, for example /tmp/test_rsa.key'
-    )
-
-    args = parser.parse_args()
-
-    if args.keyfile is None:
-        parser.print_help()
-        sys.exit(-1)
-
-    start_server(args.host, args.port, args.keyfile, args.level)
-
-
-if __name__ == '__main__':
-    main()
+    sock = create_listen_socket(HOST, PORT)
+    host_key = pm.RSAKey.from_private_key_file(HOST_KEY_PATH)
+    server_loop(sock, host_key)
