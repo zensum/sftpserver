@@ -19,10 +19,7 @@ class CustomServer(ServerInterface):
         key_path = os.environ.get("SFTP_PUBLIC_KEY_PATH", None)
         self.username = os.environ["SFTP_USERNAME"]
         self.password = os.environ.get("SFTP_PASSWORD", None)
-        self.authorized_keys = list(read_authorized_keys(key_path))
-
-    def is_key_authorized(self, key):
-        return any(k == key for k in self.authorized_keys)
+        self.authorized_keys = set(read_authorized_keys(key_path))
 
     def check_auth_password(self, username, password):
         if not SFTP_PASSWORD:
@@ -37,7 +34,7 @@ class CustomServer(ServerInterface):
         if username != self.username:
             return AUTH_FAILED
 
-        if self.is_key_authorized(key):
+        if key in self.authorized_keys:
             return AUTH_SUCCESSFUL
         else:
             return AUTH_FAILED
