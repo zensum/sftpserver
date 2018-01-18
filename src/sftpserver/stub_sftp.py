@@ -17,7 +17,10 @@
 
 import os
 from paramiko import ServerInterface, SFTPServerInterface, SFTPServer, SFTPAttributes, \
-    SFTPHandle, SFTP_OK, AUTH_SUCCESSFUL, AUTH_FAILED, OPEN_SUCCEEDED, SFTP_PERMISSION_DENIED, SFTP_NO_SUCH_FILE, AUTH_FAILED
+    SFTPHandle, SFTP_OK, AUTH_SUCCESSFUL, AUTH_FAILED, OPEN_SUCCEEDED, SFTP_PERMISSION_DENIED, SFTP_NO_SUCH_FILE, AUTH_FAILED, \
+    RSAKey
+from paramiko.py3compat import decodebytes,b
+
 from google.cloud import storage
 import time
 import logging
@@ -28,11 +31,24 @@ logging.basicConfig(level=logging.DEBUG)
 PROJECT_ID = os.environ["GCP_PROJECT_ID"]
 BUCKET = os.environ["GCP_STORAGE_BUCKET"]
 
-SFTP_PUBLIC_KEY = os.environ.get("SFTP_PUBLIC_KEY", None)
+SFTP_PUBLIC_KEY_PATH = os.environ.get("SFTP_PUBLIC_KEY_PATH", None)
 SFTP_USERNAME = os.environ["SFTP_USERNAME"]
 SFTP_PASSWORD = os.environ.get("SFTP_PASSWORD", None)
 
 DELETED_META_KEY = "se.zensum.sftpserver/deleted"
+
+def read_authorized_keys(path):
+    return (
+        parse_pubkey(l)
+        for l in open(path, "r")
+        if l.strip()
+    )
+
+def parse_pubkey(line):
+    data = line.strip().split(" ")[1]
+    return RSAKey(data=decodebytes(b(data)))
+
+authorized_keys = list(read_authorized_keys(SFTP_PUBLIC_KEY_PATH))
 
 def get_storage_client():
     return storage.Client(project=PROJECT_ID)
@@ -48,10 +64,13 @@ class StubServer (ServerInterface):
         return AUTH_SUCCESSFUL
 
     def check_auth_publickey(self, username, key):
-        if username != SFTP_USERNAME or key != SFTP_PUBLIC_KEY:
+        if username != SFTP_USERNAME:
             return AUTH_FAILED
-
-        return AUTH_SUCCESSFUL
+        key_matches = any(k == key for k in authorized_keys)
+        if key_matches:
+            return AUTH_SUCCESSFUL
+        else:
+            return AUTH_FAILED
 
     def check_channel_request(self, kind, chanid):
         return OPEN_SUCCEEDED
@@ -68,6 +87,7 @@ class StubSFTPHandle (SFTPHandle):
     def chattr(self, attr):
         return SFTP_PERMISSION_DENIED
 
+
 def blob_to_stat(blob):
     attr = SFTPAttributes()
     attr.filename = blob.name
@@ -81,17 +101,20 @@ def blob_to_stat(blob):
     attr.st_atime = blob.updated.timestamp() if blob.updated else ts
     return attr
 
+
 def is_blob_deleted(blob):
     return (
         blob.metadata and
         blob.metadata.get(DELETED_META_KEY, False) == "1"
     )
 
+
 def load_blob_to_bfr(blob):
     bfr = BytesIO()
     blob.download_to_file(bfr)
     bfr.seek(0)
     return bfr
+
 
 def create_handle(blob, flags):
     fobj = StubSFTPHandle(flags)
@@ -100,6 +123,7 @@ def create_handle(blob, flags):
     fobj.readfile = load_blob_to_bfr(blob)
     fobj.writefile = None
     return fobj
+
 
 def mark_as_deleted(blob):
     if not blob:
@@ -130,15 +154,14 @@ class StubSFTPServer (SFTPServerInterface):
 
     def list_folder(self, path):
         prefix = path if path != "/" else None
-        res = self.bucket.list_blobs(prefix=prefix, max_results=1000, delimiter="/")
+        res = self.bucket.list_blobs(
+            prefix=prefix, max_results=1000, delimiter="/")
         return [blob_to_stat(blob)
                 for blob in res if not is_blob_deleted(blob)]
-
 
     def stat(self, path):
         blob = self.get_file(path)
         return blob_to_stat(blob)
-
 
     def lstat(self, path):
         blob = self.get_file(path)
