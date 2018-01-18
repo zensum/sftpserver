@@ -16,16 +16,9 @@
 # 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 
 import os
-from paramiko import ServerInterface, SFTPServerInterface, SFTPServer, SFTPAttributes, \
-    SFTPHandle, SFTP_OK, AUTH_SUCCESSFUL, AUTH_FAILED, OPEN_SUCCEEDED, SFTP_PERMISSION_DENIED, SFTP_NO_SUCH_FILE, AUTH_FAILED, \
-    RSAKey
-from paramiko.py3compat import decodebytes,b
+from paramiko import SFTPServerInterface, SFTPAttributes, \
+    SFTPHandle, SFTP_OK, SFTP_PERMISSION_DENIED, SFTP_NO_SUCH_FILE
 from sftpserver.storage import StorageEngine
-import time
-import logging
-from io import BytesIO
-
-logging.basicConfig(level=logging.DEBUG)
 
 def blob_to_stat(blob):
     attr = SFTPAttributes()

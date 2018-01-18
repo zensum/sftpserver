@@ -5,6 +5,9 @@ from sftpserver.stub_sftp import StubSFTPServer
 from sftpserver.auth import CustomServer
 import time
 
+import logging
+logging.basicConfig(level=logging.DEBUG)
+
 HOST = 'localhost'
 PORT = int(os.environ.get("PORT", "3373"))
 HOST_KEY_PATH = os.environ["HOST_KEY_PATH"]
