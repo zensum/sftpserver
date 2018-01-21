@@ -1,5 +1,4 @@
 import paramiko as pm
-import os
 import socket
 from sftpserver.sftp import SFTP
 from sftpserver.auth import CustomServer
