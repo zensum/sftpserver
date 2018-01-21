@@ -1,14 +1,12 @@
-import os
 from google.cloud import storage
 from io import BytesIO
+import sftpserver.config as cfg
 
-PROJECT_ID = os.environ["GCP_PROJECT_ID"]
-BUCKET = os.environ["GCP_STORAGE_BUCKET"]
 DELETED_META_KEY = "se.zensum.sftpserver/deleted"
 
 
 def get_storage_client():
-    return storage.Client(project=PROJECT_ID)
+    return storage.Client(project=cfg.gcp.project_id)
 
 
 def is_blob_deleted(blob):
@@ -44,7 +42,7 @@ def mark_as_deleted(blob):
 class StorageEngine(object):
     def __init__(self):
         self.client = get_storage_client()
-        self.bucket = self.client.get_bucket(BUCKET)
+        self.bucket = self.client.get_bucket(cfg.gcp.storage_bucket)
         if self.bucket is None:
             raise RuntimeError("Missing bucket")
 

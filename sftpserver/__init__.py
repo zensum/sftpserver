@@ -3,14 +3,12 @@ import os
 import socket
 from sftpserver.sftp import SFTP
 from sftpserver.auth import CustomServer
+import sftpserver.config as cfg
 import time
 
 import logging
 logging.basicConfig(level=logging.DEBUG)
 
-HOST = 'localhost'
-PORT = int(os.environ.get("PORT", "3373"))
-HOST_KEY_PATH = os.environ["HOST_KEY_PATH"]
 BACKLOG = 10
 
 
@@ -40,13 +38,15 @@ def server_loop(sock, host_key, server):
         conn, addr = sock.accept()
         transport = create_transport(conn, host_key)
         transport.start_server(server=server)
-        transport.accept()
+        # Chan is assigned to keep it from being GC'd
+        chan = transport.accept() # noqa
         while transport.is_active():
             time.sleep(1)
 
 
 def main():
     server = CustomServer()
-    sock = create_listen_socket(HOST, PORT)
-    host_key = pm.RSAKey.from_private_key_file(HOST_KEY_PATH)
+    port = int(cfg.sftp.port)
+    sock = create_listen_socket(cfg.sftp.listen_host, port)
+    host_key = pm.RSAKey.from_private_key_file(cfg.sftp.host_key_path)
     server_loop(sock, host_key, server)

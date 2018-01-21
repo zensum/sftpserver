@@ -1,8 +1,8 @@
-import os
 from paramiko import (RSAKey, ServerInterface,
                       AUTH_SUCCESSFUL, AUTH_FAILED,
                       OPEN_SUCCEEDED)
 from paramiko.py3compat import b, decodebytes
+import sftpserver.config as cfg
 
 
 def read_authorized_keys(path):
@@ -21,10 +21,13 @@ def parse_pubkey(line):
 class CustomServer(ServerInterface):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        key_path = os.environ.get("SFTP_PUBLIC_KEY_PATH", None)
-        self.username = os.environ["SFTP_USERNAME"]
-        self.password = os.environ.get("SFTP_PASSWORD", None)
-        self.authorized_keys = set(read_authorized_keys(key_path))
+        key_path = cfg.auth.authorized_keys_path
+        self.username = cfg.auth.username
+        self.password = cfg.auth.password
+        if key_path is None:
+            self.authorized_keys = set()
+        else:
+            self.authorized_keys = set(read_authorized_keys(key_path))
 
     def check_auth_password(self, username, password):
         if not self.password:

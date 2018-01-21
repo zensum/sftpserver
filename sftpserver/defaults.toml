@@ -1,0 +1,7 @@
+[auth]
+    username = "sftpserver"
+
+[sftp]
+    port = 2222
+    listen = "localhost"
+    host_key_path = "host_key"

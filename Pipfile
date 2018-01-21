@@ -9,6 +9,7 @@ name = "pypi"
 
 paramiko = "*"
 google-cloud-storage = "*"
+toml = "*"
 
 
 [dev-packages]
