@@ -37,7 +37,6 @@ jobs:
             TAG=$CIRCLE_SHA1
             docker login -u $HUB_USERNAME -p $HUB_PASSWORD
             docker push zensum/$CIRCLE_PROJECT_REPONAME:$TAG
-            docker push zensum/$CIRCLE_PROJECT_REPONAME:latest
 
 workflows:
   version: 2
