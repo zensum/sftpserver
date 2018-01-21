@@ -32,7 +32,6 @@ jobs:
       - run:
         name: "Load saved image"
         command: |
-          cd test
           docker load -i /tmp/workspace/latest
 
       - deploy:
