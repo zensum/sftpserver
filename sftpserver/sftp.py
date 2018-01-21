@@ -18,7 +18,6 @@ def blob_to_stat(blob):
 
 def create_handle(path, bfr, flags):
     fobj = StorageHandle(flags)
-    fobj.blob = blob
     fobj.filename = path
     fobj.readfile = bfr
     fobj.writefile = None

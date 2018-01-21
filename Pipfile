@@ -8,7 +8,7 @@ name = "pypi"
 [packages]
 
 paramiko = "*"
-google-cloud = "*"
+google-cloud-storage = "*"
 
 
 [dev-packages]

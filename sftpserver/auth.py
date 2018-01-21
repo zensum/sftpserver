@@ -22,7 +22,7 @@ class CustomServer(ServerInterface):
         self.authorized_keys = set(read_authorized_keys(key_path))
 
     def check_auth_password(self, username, password):
-        if not SFTP_PASSWORD:
+        if not self.password:
             return AUTH_FAILED
 
         if username != self.username or password != self.password:
