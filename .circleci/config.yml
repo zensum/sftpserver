@@ -6,16 +6,6 @@ jobs:
       - image: gradle:4.2-jdk8
     steps:
       - checkout
-      - restore_cache:
-          key: circleci-{{ checksum "build.gradle" }}
-      - run: gradle dependencies
-      - save_cache:
-          paths:
-            - ~/.gradle
-          key: circleci-{{ checksum "build.gradle" }}
-      - run: gradle build
-      - run: gradle test
-
 
   docker-build:
       docker:
