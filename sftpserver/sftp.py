@@ -1,4 +1,3 @@
-import os
 from paramiko import SFTPServerInterface, SFTPAttributes, \
     SFTPHandle, SFTP_OK, SFTP_PERMISSION_DENIED, SFTP_NO_SUCH_FILE
 from sftpserver.storage import StorageEngine

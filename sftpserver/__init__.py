@@ -40,7 +40,7 @@ def server_loop(sock, host_key, server):
         conn, addr = sock.accept()
         transport = create_transport(conn, host_key)
         transport.start_server(server=server)
-        channel = transport.accept()
+        transport.accept()
         while transport.is_active():
             time.sleep(1)
 
