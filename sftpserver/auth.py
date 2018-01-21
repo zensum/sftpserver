@@ -1,5 +1,7 @@
 import os
-from paramiko import RSAKey, ServerInterface, AUTH_SUCCESSFUL, AUTH_FAILED, OPEN_SUCCEEDED
+from paramiko import (RSAKey, ServerInterface,
+                      AUTH_SUCCESSFUL, AUTH_FAILED,
+                      OPEN_SUCCEEDED)
 from paramiko.py3compat import b, decodebytes
 
 
