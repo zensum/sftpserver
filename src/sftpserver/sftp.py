@@ -1,20 +1,3 @@
-# Copyright (C) 2018 Zensum AB <dev@zensum.se>
-# Copyright (C) 2003-2009  Robey Pointer <robeypointer@gmail.com>
-#
-# Paramiko is free software; you can redistribute it and/or modify it under the
-# terms of the GNU Lesser General Public License as published by the Free
-# Software Foundation; either version 2.1 of the License, or (at your option)
-# any later version.
-#
-# Paramiko is distrubuted in the hope that it will be useful, but WITHOUT ANY
-# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
-# A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
-# details.
-#
-# You should have received a copy of the GNU Lesser General Public License
-# along with Paramiko; if not, write to the Free Software Foundation, Inc.,
-# 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
-
 import os
 from paramiko import SFTPServerInterface, SFTPAttributes, \
     SFTPHandle, SFTP_OK, SFTP_PERMISSION_DENIED, SFTP_NO_SUCH_FILE
@@ -33,13 +16,6 @@ def blob_to_stat(blob):
     attr.st_atime = blob.updated.timestamp() if blob.updated else ts
     return attr
 
-class StorageHandle(SFTPHandle):
-    def stat(self):
-        return blob_to_stat(self.blob)
-
-    def chattr(self, attr):
-        return SFTP_PERMISSION_DENIED
-
 def create_handle(path, bfr, flags):
     fobj = StorageHandle(flags)
     fobj.blob = blob
@@ -48,8 +24,14 @@ def create_handle(path, bfr, flags):
     fobj.writefile = None
     return fobj
 
+class StorageHandle(SFTPHandle):
+    def stat(self):
+        return blob_to_stat(self.blob)
 
-class StubSFTPServer (SFTPServerInterface):
+    def chattr(self, attr):
+        return SFTP_PERMISSION_DENIED
+
+class SFTP(SFTPServerInterface):
     def __init__(self, *args, **kwargs):
         self.storage = StorageEngine()
         super().__init__(*args, **kwargs)

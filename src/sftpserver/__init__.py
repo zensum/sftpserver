@@ -1,7 +1,7 @@
 import paramiko as pm
 import os
 import socket
-from sftpserver.stub_sftp import StubSFTPServer
+from sftpserver.sftp import SFTP
 from sftpserver.auth import CustomServer
 import time
 
@@ -28,7 +28,7 @@ def create_transport(conn, host_key):
     t = pm.Transport(conn)
     t.add_server_key(host_key)
     t.set_subsystem_handler(
-        'sftp', pm.SFTPServer, StubSFTPServer
+        'sftp', pm.SFTPServer, SFTP
     )
     return t
 
