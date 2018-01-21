@@ -55,7 +55,7 @@ workflows:
       - docker-deploy:
           context: org-global
           requires:
-            - build
+            - docker-build
           filters:
             branches:
               only: master
