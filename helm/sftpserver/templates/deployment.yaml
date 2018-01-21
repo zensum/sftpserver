@@ -1,0 +1,53 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: {{ template "fullname" . }}
+  labels:
+    app: {{ template "name" . }}
+    chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  template:
+    metadata:
+      labels:
+        app: {{ template "name" . }}
+        release: {{ .Release.Name }}
+    spec:
+      volumes:
+        - name: config-volume
+          configMap:
+            name: cfg-{{ template "fullname" . }}
+        - name: "service-account"
+          secret:
+            secretName: sec-{{ template "fullname" . }}-service-account
+        - name: "host-key"
+          secret:
+            secretName: sec-{{ template "fullname" . }}-host-key
+      containers:
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - containerPort: {{ .Values.service.internalPort }}
+          volumeMounts:
+            - name: config-volume
+              mountPath: /etc/config
+            - name: service-account
+              mountPath: "/var/run/secret/cloud.google.com"
+            - name: host-key
+              mountPath: "/etc/host-key"
+          env:
+            - name: PORT
+              value: {{ .Values.service.internalPort }}
+            - name: GCP_PROJECT_ID
+              value: {{ .Values.env.projectId }}
+            - name: GCP_STORAGE_BUCKET
+              value: {{ .Values.env.storageBucket }}
+          resources:
+{{ toYaml .Values.resources | indent 12 }}
+    {{- if .Values.nodeSelector }}
+      nodeSelector:
+{{ toYaml .Values.nodeSelector | indent 8 }}
+    {{- end }}

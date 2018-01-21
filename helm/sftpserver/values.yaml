@@ -1,0 +1,22 @@
+# Default values for sftpserver.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+replicaCount: 2
+image:
+  repository: zensum/sftpserver
+  tag: stable
+  pullPolicy: IfNotPresent
+service:
+  type: NodePort
+  externalPort: 22
+  internalPort: 2222
+env:
+  projectId: "example"
+  storageBucket: "example"
+config: |
+  [auth]
+    authorized_keys_path = "/etc/config/authorized_keys"
+  [sftp]
+    listen = "localhost"
+    host_key_path = "/etc/host-key/id_rsa"
+resources: {}
