@@ -17,6 +17,6 @@ config: |
   [auth]
     authorized_keys_path = "/etc/config/authorized_keys"
   [sftp]
-    listen = "localhost"
+    listen = "0.0.0.0"
     host_key_path = "/etc/host-key/id_rsa"
 resources: {}
