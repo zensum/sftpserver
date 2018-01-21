@@ -31,9 +31,7 @@ jobs:
           at: /tmp/workspace
       - run:
         name: "Load saved image"
-        command: |
-          docker load -i /tmp/workspace/latest
-
+        command: "docker load -i /tmp/workspace/latest"
       - deploy:
           command: |
             TAG=$CIRCLE_SHA1
