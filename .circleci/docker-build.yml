@@ -1,0 +1,8 @@
+      - docker-deploy:
+          context: org-global
+          requires:
+            - docker-build
+            - build
+          filters:
+            branches:
+              only: master

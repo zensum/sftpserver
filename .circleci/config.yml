@@ -1,0 +1,74 @@
+version: 2
+jobs:
+  build:
+    working_directory: ~/workdir
+    docker:
+      - image: gradle:4.2-jdk8
+    steps:
+      - checkout
+      - restore_cache:
+          key: circleci-{{ checksum "build.gradle" }}
+      - run: gradle dependencies
+      - save_cache:
+          paths:
+            - ~/.gradle
+          key: circleci-{{ checksum "build.gradle" }}
+      - run: gradle build
+      - run: gradle test
+
+
+  docker-build:
+      docker:
+        - image: docker:17.07.0   # (1)
+      working_directory: ~/workdir
+      steps:
+        - checkout
+        - setup_remote_docker
+        - run: chmod -v +x .circleci/*.sh
+        - run: sh .circleci/docker-build.sh
+        - persist_to_workspace:
+            root: /tmp/workspace/
+            paths:
+              - latest
+
+  docker-deploy:
+    docker:
+      - image: docker:17.07.0   # (1)
+    working_directory: ~/workdir
+    steps:
+      - setup_remote_docker
+      - attach_workspace:
+          at: /tmp/workspace
+      - run:
+        name: "Load saved image"
+        command: |
+          cd test
+          docker load -i /tmp/workspace/latest
+
+      - deploy:
+          command: |
+            TAG=$CIRCLE_SHA1
+            docker login -u $HUB_USERNAME -p $HUB_PASSWORD
+            docker push zensum/$ZENS_NAME:$TAG
+            docker push zensum/$ZENS_NAME:latest
+
+workflows:
+  version: 2
+  build_and_deploy:
+    jobs:
+      - build:
+          context: org-global
+      - docker-build:
+          context: org-global
+          requires:
+            - build
+          filters:
+            branches:
+              only: master
+      - docker-deploy:
+          context: org-global
+          requires:
+            - build
+          filters:
+            branches:
+              only: master
