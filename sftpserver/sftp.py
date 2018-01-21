@@ -3,6 +3,7 @@ from paramiko import SFTPServerInterface, SFTPAttributes, \
     SFTPHandle, SFTP_OK, SFTP_PERMISSION_DENIED, SFTP_NO_SUCH_FILE
 from sftpserver.storage import StorageEngine
 
+
 def blob_to_stat(blob):
     attr = SFTPAttributes()
     attr.filename = blob.name
@@ -16,6 +17,7 @@ def blob_to_stat(blob):
     attr.st_atime = blob.updated.timestamp() if blob.updated else ts
     return attr
 
+
 def create_handle(path, bfr, flags):
     fobj = StorageHandle(flags)
     fobj.filename = path
@@ -23,12 +25,14 @@ def create_handle(path, bfr, flags):
     fobj.writefile = None
     return fobj
 
+
 class StorageHandle(SFTPHandle):
     def stat(self):
         return blob_to_stat(self.blob)
 
     def chattr(self, attr):
         return SFTP_PERMISSION_DENIED
+
 
 class SFTP(SFTPServerInterface):
     def __init__(self, *args, **kwargs):

@@ -13,6 +13,7 @@ PORT = int(os.environ.get("PORT", "3373"))
 HOST_KEY_PATH = os.environ["HOST_KEY_PATH"]
 BACKLOG = 10
 
+
 def create_listen_socket(host, port):
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     sock.setsockopt(
@@ -24,6 +25,7 @@ def create_listen_socket(host, port):
     sock.listen(BACKLOG)
     return sock
 
+
 def create_transport(conn, host_key):
     t = pm.Transport(conn)
     t.add_server_key(host_key)
@@ -31,6 +33,7 @@ def create_transport(conn, host_key):
         'sftp', pm.SFTPServer, SFTP
     )
     return t
+
 
 def server_loop(sock, host_key, server):
     while True:
@@ -40,6 +43,7 @@ def server_loop(sock, host_key, server):
         channel = transport.accept()
         while transport.is_active():
             time.sleep(1)
+
 
 def main():
     server = CustomServer()

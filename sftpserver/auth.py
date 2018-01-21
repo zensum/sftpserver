@@ -2,6 +2,7 @@ import os
 from paramiko import RSAKey, ServerInterface, AUTH_SUCCESSFUL, AUTH_FAILED, OPEN_SUCCEEDED
 from paramiko.py3compat import b, decodebytes
 
+
 def read_authorized_keys(path):
     return (
         parse_pubkey(l)
@@ -9,9 +10,11 @@ def read_authorized_keys(path):
         if l.strip()
     )
 
+
 def parse_pubkey(line):
     data = line.strip().split(" ")[1]
     return RSAKey(data=decodebytes(b(data)))
+
 
 class CustomServer(ServerInterface):
     def __init__(self, *args, **kwargs):

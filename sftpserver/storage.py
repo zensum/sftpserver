@@ -6,8 +6,10 @@ PROJECT_ID = os.environ["GCP_PROJECT_ID"]
 BUCKET = os.environ["GCP_STORAGE_BUCKET"]
 DELETED_META_KEY = "se.zensum.sftpserver/deleted"
 
+
 def get_storage_client():
     return storage.Client(project=PROJECT_ID)
+
 
 def is_blob_deleted(blob):
     return (
@@ -15,11 +17,13 @@ def is_blob_deleted(blob):
         blob.metadata.get(DELETED_META_KEY, False) == "1"
     )
 
+
 def load_blob_to_bfr(blob):
     bfr = BytesIO()
     blob.download_to_file(bfr)
     bfr.seek(0)
     return bfr
+
 
 def mark_as_deleted(blob):
     if not blob:
@@ -35,7 +39,6 @@ def mark_as_deleted(blob):
     blob.metadata = md
     blob.patch()
     return True
-
 
 
 class StorageEngine(object):
@@ -56,7 +59,6 @@ class StorageEngine(object):
             delimiter="/"
         )
         return (x for x in res if not is_blob_deleted(x))
-
 
     def get_path_and_buffer(self, fname):
         f = self.get_file(fname)
