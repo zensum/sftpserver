@@ -7,7 +7,7 @@ image:
   tag: stable
   pullPolicy: IfNotPresent
 service:
-  type: NodePort
+  type: LoadBalancer
   externalPort: 22
   internalPort: 2222
 env:
