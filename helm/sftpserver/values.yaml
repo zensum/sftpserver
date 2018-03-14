@@ -13,6 +13,7 @@ service:
 env:
   projectId: "example"
   storageBucket: "example"
+  sftpUsername: "example"
 config: |
   [auth]
     authorized_keys_path = "/etc/config/authorized_keys"

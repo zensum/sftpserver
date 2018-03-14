@@ -45,6 +45,8 @@ spec:
               value: {{ .Values.env.projectId }}
             - name: GCP_STORAGE_BUCKET
               value: {{ .Values.env.storageBucket }}
+            - name: SFTP_USERNAME
+              value: {{ .Values.env.sftpUsername }}
           resources:
 {{ toYaml .Values.resources | indent 12 }}
     {{- if .Values.nodeSelector }}
