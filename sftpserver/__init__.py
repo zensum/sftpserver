@@ -31,7 +31,7 @@ def create_transport(conn, host_key):
     )
     return t
 
-
+chans = []
 def server_loop(sock, host_key, server):
     while True:
         conn, addr = sock.accept()
@@ -39,8 +39,8 @@ def server_loop(sock, host_key, server):
         transport.start_server(server=server)
         # Chan is assigned to keep it from being GC'd
         chan = transport.accept() # noqa
-        while transport.is_active():
-            time.sleep(1)
+        chans.append(chan)
+        time.sleep(1)
 
 
 def main():
