@@ -7,6 +7,7 @@ import time
 
 import logging
 logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger("sftpserver")
 
 BACKLOG = 10
 
@@ -38,9 +39,19 @@ def server_loop(sock, host_key, server):
         transport = create_transport(conn, host_key)
         transport.start_server(server=server)
         # Chan is assigned to keep it from being GC'd
-        chan = transport.accept() # noqa
+        chan = transport.accept()
         chans.append(chan)
-        time.sleep(1)
+        if len(chans) > 100:
+            clean_chans()
+        time.sleep(.1)
+
+def clean_chans():
+    for c in chans[:]:
+        try:
+            if c.exit_status_ready():
+                chans.remove(c)
+        except AttributeError:
+            pass #Sometimes remove fails due to race-condition, this "solves" it
 
 
 def main():
@@ -48,4 +59,9 @@ def main():
     port = int(cfg.sftp.port)
     sock = create_listen_socket(cfg.sftp.listen_host, port)
     host_key = pm.RSAKey.from_private_key_file(cfg.sftp.host_key_path)
-    server_loop(sock, host_key, server)
+    while True:
+        try:
+            server_loop(sock, host_key, server)
+        except (pm.ssh_exception.SSHException,EOFError) as e:
+            logger.error("Server exited badly: {}".format(e))
+
