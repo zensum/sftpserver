@@ -52,7 +52,10 @@ class CustomServer(ServerInterface):
 
     def get_allowed_auths(self, username):
         """List availble auth mechanisms."""
+        mechanisms=[]
+
         if len(self.authorized_keys):
-            return "password,publickey"
-        else:
-            return "password"
+            mechanisms.append("publickey")
+        if cfg.auth.password:
+            mechanisms.append("password")
+        return ",".join(mechanisms) or "none"
