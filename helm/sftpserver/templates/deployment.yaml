@@ -31,6 +31,11 @@ spec:
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:
             - containerPort: {{ .Values.service.internalPort }}
+          livenessProbe:
+            tcpSocket:
+              port: {{ .Values.service.internalPort }}
+            initialDelaySeconds: 30 
+            periodSeconds: 30
           volumeMounts:
             - name: config-volume
               mountPath: /etc/config
