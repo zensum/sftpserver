@@ -17,3 +17,4 @@ spec:
   selector:
     app: {{ template "name" . }}
     release: {{ .Release.Name }}
+{{ toYaml .Values.spec | indent 2 }}
