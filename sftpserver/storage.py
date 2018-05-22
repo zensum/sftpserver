@@ -30,7 +30,7 @@ def mark_as_deleted(blob):
     if md is None:
         md = {}
 
-    if md[DELETED_META_KEY] == "1":
+    if is_blob_deleted(blob):
         return False
 
     md[DELETED_META_KEY] = "1"
