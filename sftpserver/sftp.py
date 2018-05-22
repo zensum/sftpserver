@@ -1,6 +1,7 @@
 from paramiko import SFTPServerInterface, SFTPAttributes, \
     SFTPHandle, SFTP_OK, SFTP_PERMISSION_DENIED, SFTP_NO_SUCH_FILE
 from sftpserver.storage import StorageEngine
+import stat
 
 
 def blob_to_stat(blob):
@@ -14,6 +15,10 @@ def blob_to_stat(blob):
     attr.st_ctime = ts
     attr.st_mtime = blob.updated.timestamp() if blob.updated else ts
     attr.st_atime = blob.updated.timestamp() if blob.updated else ts
+    if (hasattr(blob,"is_dir")): #HACKY HACKY HORRIBLE
+            attr.st_mode &= ~stat.S_IFREG
+            attr.st_mode |= stat.S_IFDIR
+
     return attr
 
 
@@ -43,6 +48,7 @@ class SFTP(SFTPServerInterface):
                 for blob in self.storage.list_folder(path)]
 
     def stat(self, path):
+        print(dir(self.storage))
         return blob_to_stat(self.storage.get_file(path))
 
     def lstat(self, path):

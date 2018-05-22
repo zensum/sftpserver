@@ -1,9 +1,20 @@
 from google.cloud import storage
 from io import BytesIO
 import sftpserver.config as cfg
-
+from itertools import chain
+from collections import namedtuple
 DELETED_META_KEY = "se.zensum.sftpserver/deleted"
 
+DuckTime=namedtuple("DuckTime",["timestamp"])
+duckNever=DuckTime(lambda :0)
+class DuckBlob: #THIS IS DUMB..
+    def __init__(s,prefix,name):
+        s.metadata = False
+        s.name = (prefix or "" + name).rstrip("/")
+        s.size = 0
+        s.time_created = duckNever
+        s.updated = duckNever
+        s.is_dir=True
 
 def get_storage_client():
     return storage.Client(project=cfg.gcp.project_id)
@@ -11,8 +22,9 @@ def get_storage_client():
 
 def is_blob_deleted(blob):
     return (
+        hasattr(blob, "metadata") and (
         blob.metadata and
-        blob.metadata.get(DELETED_META_KEY, False) == "1"
+        blob.metadata.get(DELETED_META_KEY, False) == "1")
     )
 
 
@@ -56,7 +68,10 @@ class StorageEngine(object):
             max_results=1000,
             delimiter="/"
         )
-        return (x for x in res if not is_blob_deleted(x))
+        # all the directories are in
+        #res.prefixes
+        reified_res = list(res)
+        return (x for x in chain(reified_res, (DuckBlob(prefix,i) for i in res.prefixes)) if not is_blob_deleted(x))
 
     def get_path_and_buffer(self, fname):
         f = self.get_file(fname)
