@@ -70,8 +70,9 @@ class StorageEngine(object):
         )
         # all the directories are in
         #res.prefixes
-        reified_res = list(res)
-        return (x for x in chain(reified_res, (DirectoryBlob(prefix,i) for i in res.prefixes)) if not is_blob_deleted(x))
+        reified_res = list(res) #reading res has side effects needed for the next line, sorry..
+        directories = [DirectoryBlob(prefix,i) for i in res.prefixes]
+        return (x for x in chain(directories, reified_res) if not is_blob_deleted(x) and x.name and x.name != prefix)
 
     def get_path_and_buffer(self, fname):
         f = self.get_file(fname)
