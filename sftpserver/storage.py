@@ -68,7 +68,7 @@ class StorageEngine(object):
         return self.bucket.get_blob(fname.strip("/"))
 
     def list_folder(self, path):
-        prefix = path.rstrip("/")+"/" if path != "/" else None
+        prefix = path.strip("/")+"/" if path != "/" else None
         res = self.bucket.list_blobs(
             prefix=prefix,
             max_results=1000,
