@@ -8,9 +8,12 @@ DELETED_META_KEY = "se.zensum.sftpserver/deleted"
 DuckTime=namedtuple("DuckTime",["timestamp"])
 duckNever=DuckTime(lambda :0)
 class DirectoryBlob:
+    """Google storage does not reeeeaalllyy have a concept of directories
+    This class emulates enough of the gstorage interface to be statable.
+    """
     def __init__(s,prefix,name):
         s.metadata = False
-        s.name = (prefix or "" + name)
+        s.name = (prefix or "" + name).rstrip("/")
         s.size = 0
         s.time_created = duckNever
         s.updated = duckNever
@@ -59,10 +62,13 @@ class StorageEngine(object):
             raise RuntimeError("Missing bucket")
 
     def get_file(self, fname):
+        if fname.endswith("/"):
+            path = fname.rsplit("/",1)
+            return DirectoryBlob(*path)
         return self.bucket.get_blob(fname.strip("/"))
 
     def list_folder(self, path):
-        prefix = path if path != "/" else None
+        prefix = path.rstrip("/")+"/" if path != "/" else None
         res = self.bucket.list_blobs(
             prefix=prefix,
             max_results=1000,
