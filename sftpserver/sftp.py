@@ -1,24 +1,27 @@
 from paramiko import SFTPServerInterface, SFTPAttributes, \
     SFTPHandle, SFTP_OK, SFTP_PERMISSION_DENIED, SFTP_NO_SUCH_FILE
-from sftpserver.storage import StorageEngine
+from sftpserver.storage import StorageEngine, DirectoryBlob
 import stat
 
 
 def blob_to_stat(blob):
     attr = SFTPAttributes()
-    attr.filename = blob.name
-    attr.st_size = blob.size
     attr.st_mode = 0o0100444
+    if (blob == None or isinstance(blob,DirectoryBlob)):
+            attr.st_mode &= ~stat.S_IFREG
+            attr.st_mode |= stat.S_IFDIR
+
+    if blob == None: #Assume non-existing files are directories
+        return attr
+
+    attr.filename = blob.name.strip("/").rsplit("/",1)[-1]
+    attr.st_size = blob.size
     attr.st_uid = 1000
     attr.st_gid = 1000
     ts = blob.time_created.timestamp()
     attr.st_ctime = ts
     attr.st_mtime = blob.updated.timestamp() if blob.updated else ts
     attr.st_atime = blob.updated.timestamp() if blob.updated else ts
-    if (hasattr(blob,"is_dir") and blob.is_dir ):
-            attr.st_mode &= ~stat.S_IFREG
-            attr.st_mode |= stat.S_IFDIR
-
     return attr
 
 
@@ -37,7 +40,6 @@ class StorageHandle(SFTPHandle):
     def chattr(self, attr):
         return SFTP_PERMISSION_DENIED
 
-
 class SFTP(SFTPServerInterface):
     def __init__(self, *args, **kwargs):
         self.storage = StorageEngine()
@@ -48,7 +50,6 @@ class SFTP(SFTPServerInterface):
                 for blob in self.storage.list_folder(path)]
 
     def stat(self, path):
-        print(dir(self.storage))
         return blob_to_stat(self.storage.get_file(path))
 
     def lstat(self, path):
