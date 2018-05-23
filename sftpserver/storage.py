@@ -7,10 +7,10 @@ DELETED_META_KEY = "se.zensum.sftpserver/deleted"
 
 DuckTime=namedtuple("DuckTime",["timestamp"])
 duckNever=DuckTime(lambda :0)
-class DuckBlob: #THIS IS DUMB..
+class DirectoryBlob:
     def __init__(s,prefix,name):
         s.metadata = False
-        s.name = (prefix or "" + name).rstrip("/")
+        s.name = (prefix or "" + name)
         s.size = 0
         s.time_created = duckNever
         s.updated = duckNever
@@ -71,7 +71,7 @@ class StorageEngine(object):
         # all the directories are in
         #res.prefixes
         reified_res = list(res)
-        return (x for x in chain(reified_res, (DuckBlob(prefix,i) for i in res.prefixes)) if not is_blob_deleted(x))
+        return (x for x in chain(reified_res, (DirectoryBlob(prefix,i) for i in res.prefixes)) if not is_blob_deleted(x))
 
     def get_path_and_buffer(self, fname):
         f = self.get_file(fname)

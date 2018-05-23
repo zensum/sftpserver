@@ -15,7 +15,7 @@ def blob_to_stat(blob):
     attr.st_ctime = ts
     attr.st_mtime = blob.updated.timestamp() if blob.updated else ts
     attr.st_atime = blob.updated.timestamp() if blob.updated else ts
-    if (hasattr(blob,"is_dir")): #HACKY HACKY HORRIBLE
+    if (hasattr(blob,"is_dir") and blob.is_dir ):
             attr.st_mode &= ~stat.S_IFREG
             attr.st_mode |= stat.S_IFDIR
 
