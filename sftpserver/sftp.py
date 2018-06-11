@@ -6,10 +6,11 @@ import stat
 
 def blob_to_stat(blob):
     attr = SFTPAttributes()
-    attr.st_mode = 0o0100444
+    attr.st_mode = 0o0100666
     if (blob == None or isinstance(blob,DirectoryBlob)):
             attr.st_mode &= ~stat.S_IFREG
             attr.st_mode |= stat.S_IFDIR
+            attr.st_mode |= 0o777
 
     if blob == None: #Assume non-existing files are directories
         return attr
