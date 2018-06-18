@@ -52,6 +52,8 @@ spec:
               value: {{ .Values.env.storageBucket }}
             - name: SFTP_USERNAME
               value: {{ .Values.env.sftpUsername }}
+            - name: GCP_APPLICATION_CREDENTIALS_FILE
+              value: "/var/run/secret/cloud.google.com/key.json"
           resources:
 {{ toYaml .Values.resources | indent 12 }}
     {{- if .Values.nodeSelector }}

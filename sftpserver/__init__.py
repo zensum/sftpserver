@@ -4,6 +4,7 @@ from sftpserver.sftp import SFTP
 from sftpserver.auth import CustomServer
 import sftpserver.config as cfg
 import time
+import sys
 
 import logging
 logging.basicConfig(level=logging.DEBUG)
@@ -59,9 +60,25 @@ def main():
     port = int(cfg.sftp.port)
     sock = create_listen_socket(cfg.sftp.listen_host, port)
     host_key = pm.RSAKey.from_private_key_file(cfg.sftp.host_key_path)
+
+    if cfg.gcp.application_credentials_file == None:
+        logging.error("""
+        You need to set GCP_APPLICATION_CREDENTIALS_FILE or equivalent 
+        generate the file locally by running
+        gcloud iam service-accounts keys create sftp_credentials.json --iam-account service_uesr@{}.iam.gserviceaccount.com
+        """.format((cfg.gcp.project_id or "example-project")).strip())
+        sys.exit(1)
+
+    try:
+        open(cfg.gcp.application_credentials_file,"r")
+    except:
+        logging.error("Could not open credentials file '{}'".format((cfg.gcp.application_credentials_file)))
+        sys.exit(1)
+
     while True:
         try:
             server_loop(sock, host_key, server)
         except (pm.ssh_exception.SSHException,EOFError) as e:
-            logger.error("Server exited badly: {}".format(e))
+            if not True in ("protocol banner" in i for i in  e.args):
+                logger.error("Server exited badly: {}".format(e))
 

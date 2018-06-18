@@ -61,4 +61,5 @@ sftp = Config([
 gcp = Config([
     ("project_id", "GCP_PROJECT_ID", ["gcloud", "project_id"]),
     ("storage_bucket", "GCP_STORAGE_BUCKET", ["gcloud", "bucket"]),
+    ("application_credentials_file", "GCP_APPLICATION_CREDENTIALS_FILE", ["gcloud", "application_credentials_file"]),
 ])

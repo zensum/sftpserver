@@ -4,6 +4,7 @@ import sftpserver.config as cfg
 from itertools import chain
 from collections import namedtuple
 DELETED_META_KEY = "se.zensum.sftpserver/deleted"
+from google.oauth2 import service_account
 
 DuckTime=namedtuple("DuckTime",["timestamp"])
 duckNever=DuckTime(lambda :0)
@@ -20,7 +21,8 @@ class DirectoryBlob:
         s.is_dir=True
 
 def get_storage_client():
-    return storage.Client(project=cfg.gcp.project_id)
+    credentials = service_account.Credentials.from_service_account_file(cfg.gcp.application_credentials_file)
+    return storage.Client(credentials=credentials, project=cfg.gcp.project_id)
 
 
 def is_blob_deleted(blob):
